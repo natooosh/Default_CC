@@ -1,0 +1,93 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+import numpy as np
+from sklearn.tree import DecisionTreeClassifier, plot_tree
+from sklearn.metrics import accuracy_score, confusion_matrix
+from sklearn.model_selection import train_test_split
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score, roc_auc_score
+from sklearn.preprocessing import StandardScaler
+default_cc = pd.read_csv('/content/default of credit card clients.csv')
+default_cc.head(50)
+default_cc.describe()
+default_cc.shape
+default_cc.dtypes
+default_cc['PAY_0']== -1
+default_cc['SEX'] = default_cc['SEX'].astype('category')
+default_cc['EDUCATION'] = default_cc['EDUCATION'].astype('category')
+default_cc['MARRIAGE'] = default_cc['MARRIAGE'].astype('category')
+default_cc['PAY_0'] = default_cc['PAY_0'].astype(float)
+default_cc['PAY_2'] = default_cc['PAY_2'].astype(float)
+default_cc['PAY_3'] = default_cc['PAY_3'].astype(float)
+default_cc['PAY_4'] = default_cc['PAY_4'].astype(float)
+default_cc['PAY_5'] = default_cc['PAY_5'].astype(float)
+default_cc['PAY_6'] = default_cc['PAY_6'].astype(float)
+default_cc['default payment next month'] = default_cc['default payment next month'].astype('category')
+default_cc.dtypes
+default_cc.isna().sum()
+plt.figure(figsize=(8, 6))
+default_cc['SEX'].value_counts().plot(kind='bar')
+plt.title('Distribution of Gender (1=Male, 2=Female)')
+plt.xlabel('Gender')
+plt.ylabel('Count')
+plt.xticks(rotation=0)
+plt.show()
+plt.figure(figsize=(8, 6))
+plt.hist(default_cc['AGE'], edgecolor='black')
+plt.title('Distribution of Age')
+plt.xlabel('Age')
+plt.ylabel('Count')
+plt.show()
+default_cc_without_dep = default_cc.drop('default payment next month', axis=1)
+X = default_cc_without_dep[['SEX', 'EDUCATION']]
+X = pd.get_dummies(X)
+
+# scaler = StandardScaler()
+# X_scaled = scaler.fit_transform(dCC_mod1)
+
+Y = default_cc['default payment next month']
+
+X_train, X_test, Y_train, Y_test = train_test_split(X, Y, test_size=0.3, random_state=42)
+
+logreg_mod1 = LogisticRegression()
+
+logreg_mod1.fit(X_train, Y_train)
+
+coef_df = pd.DataFrame({'Features': X.columns, 'Coefficient': logreg_mod1.coef_[0]})
+print(coef_df)
+
+Y_pred = logreg_mod1.predict(X_test)
+
+accuracy = accuracy_score(Y_test, Y_pred)
+print(f'Accuracy: {accuracy}')
+
+Y_pred_prob = logreg_mod1.predict_proba(X_test)[:, 1]
+auroc = roc_auc_score(Y_test, Y_pred_prob)
+print(f'Area under receiver operating characteric curve (AUROC) for Model 1: {auroc}')
+X = default_cc_without_dep[['EDUCATION', 'AGE', 'MARRIAGE']]
+numeric_var = ['AGE']
+cat_var = ['EDUCATION', 'MARRIAGE']
+X = pd.get_dummies(X, columns=cat_var)
+scaler = StandardScaler()
+X_scaled = scaler.fit_transform(X)
+
+Y = default_cc['default payment next month']
+
+X_train, X_test, Y_train, Y_test = train_test_split(X_scaled, Y, test_size=0.3, random_state=42)
+
+logreg_mod2 = LogisticRegression()
+
+logreg_mod2.fit(X_train, Y_train)
+
+coef_df = pd.DataFrame({'Features': X.columns, 'Coefficient': logreg_mod2.coef_[0]})
+print(coef_df)
+
+Y_pred = logreg_mod2.predict(X_test)
+
+accuracy = accuracy_score(Y_test, Y_pred)
+print(f'Accuracy: {accuracy}')
+
+Y_pred_prob = logreg_mod2.predict_proba(X_test)[:, 1]
+auroc = roc_auc_score(Y_test, Y_pred_prob)
+print(f'Area under receiver operating characteric curve (AUROC) for Model 2: {auroc}')
